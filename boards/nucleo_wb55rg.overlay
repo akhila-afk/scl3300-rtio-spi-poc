@@ -1,0 +1,15 @@
+&spi1 {
+    status = "okay";
+    pinctrl-names = "default";
+   
+    cs-gpios = <&gpioa 4 GPIO_ACTIVE_LOW>;
+
+    scl3300: scl3300@0 {
+        compatible = "murata,scl3300";
+        reg = <0>;
+        spi-max-frequency = <2000000>;
+        status = "okay";
+    };
+};
+
+
