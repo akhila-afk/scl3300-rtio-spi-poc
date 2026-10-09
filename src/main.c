@@ -64,10 +64,6 @@ static int scl3300_decode(const uint8_t *data, size_t len)
 	LOG_INF("SCL3300 RX: %02x %02x %02x %02x",
 		data[0], data[1], data[2], data[3]);
 
-	/* Extract RS (Return Status) bits: bits [1:0] of first byte */
-	rs = data[0] & 0x03U;
-	LOG_INF("RS bits: %02x", rs);
-
 	return 0;
 }
 
@@ -91,8 +87,6 @@ static int scl3300_spi_submit(struct rtio *ctx)
 				 g_rx_buf,
 				 sizeof(g_tx_buf),
 				 NULL);
-
-	LOG_INF("SPI transfer submitted");
 
 	rtio_submit(ctx, 0);
 
@@ -127,8 +121,6 @@ static void scl3300_cqe_callback(struct rtio *r, void *user_data)
 
 	switch (g_init_state) {
 	case STATE_WHOAMI_FRAME:
-		LOG_INF("WHOAMI request sent");
-
 		g_init_state = STATE_RESET_FRAME;
 		ret = scl3300_send_command(r, SCL3300_CMD_SW_RESET);
 		break;
@@ -144,17 +136,11 @@ static void scl3300_cqe_callback(struct rtio *r, void *user_data)
 		break;
 
 	case STATE_MODE1_FRAME:
-		LOG_INF("Measurement mode command sent");
-		(void)scl3300_decode(g_rx_buf, sizeof(g_rx_buf));
-
 		g_init_state = STATE_ANGLE_FRAME;
 		ret = scl3300_send_command(r, SCL3300_CMD_ANG_CTRL);
 		break;
 
 	case STATE_ANGLE_FRAME:
-		LOG_INF("Angle output command sent");
-		(void)scl3300_decode(g_rx_buf, sizeof(g_rx_buf));
-
 		k_busy_wait(25000);
 
 		g_init_state = STATE_STATUS1_FRAME;
@@ -162,9 +148,6 @@ static void scl3300_cqe_callback(struct rtio *r, void *user_data)
 		break;
 
 	case STATE_STATUS1_FRAME:
-		LOG_INF("First STATUS read submitted");
-		(void)scl3300_decode(g_rx_buf, sizeof(g_rx_buf));
-
 		g_init_state = STATE_STATUS2_FRAME;
 		ret = scl3300_send_command(r, SCL3300_CMD_STATUS);
 		break;
